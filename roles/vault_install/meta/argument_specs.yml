@@ -1,0 +1,56 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Installs and configures the L(HashiCorp Vault,https://www.hashicorp.com/products/vault) server.
+    description:
+      - Creates a system user and group for running the B(vault) service.
+      - Downloads the Vault server binary (B(vault)).
+      - Adds a systemd unit for managing the B(vault) service.
+      - Creates a minimal B(vault) configuration.
+    options:
+      vault_install_version:
+        type: str
+        default: "1.16.0"
+        description: Version of Vault to be installed.
+      vault_install_enable_ui:
+        type: bool
+        default: true
+        description: Controls the status of the Vault Web UI.
+      vault_install_listen_address:
+        type: str
+        default: "0.0.0.0"
+        description: IP address the Vault server should bind to.
+      vault_install_listen_port:
+        type: int
+        default: 8200
+        description: Port number the Vault server should listen on.
+      vault_install_storage:
+        type: str
+        choices:
+          - filesystem
+          - s3
+        default: filesystem
+        description: Type of backend storaged used by Vault for data.
+      vault_install_storage_filesystem_path:
+        type: path
+        default: /srv/vault/data
+        description: Filesystem path used by Vault when O(vault_install_storage) is V(filesystem).
+      vault_install_storage_s3_access_key:
+        type: str
+        description: S3 Access key.
+      vault_install_storage_s3_secret_key:
+        type: str
+        description: S3 Secret key.
+      vault_install_storage_s3_bucket:
+        type: str
+        description: S3 Bucket used for storage
+      vault_install_storage_s3_region:
+        type: str
+        description: Region S3 bucket exists in.
+      vault_install_storage_s3_endpoint:
+        type: str
+        description: Endpoint used for private S3 type installations.
+      vault_install_storage_s3_path_style:
+        type: str
+        description: Many S3 private installations (Minio, Swift, etc) use path style.

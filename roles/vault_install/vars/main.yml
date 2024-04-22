@@ -1,0 +1,9 @@
+---
+vault_install_system_group: vault
+vault_install_system_user: vault
+vault_install_prerequisites:
+  - libcap2-bin
+  - unzip
+vault_install_architecture_map:
+  x86_64: amd64
+vault_install_download_url: "https://releases.hashicorp.com/vault/{{ vault_install_version }}/vault_{{ vault_install_version }}_{{ ansible_system | lower }}_{{ [ansible_architecture] | map('extract', vault_install_architecture_map) | first }}.zip"

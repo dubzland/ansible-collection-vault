@@ -1,0 +1,23 @@
+{% if vault_install_enable_ui %}
+ui = true
+{% endif %}
+
+listener "tcp" {
+  address     = "{{ vault_install_listen_address }}:{{ vault_install_listen_port }}"
+  tls_disable = 1
+}
+
+{% if vault_install_storage == "filesystem" %}
+storage "file" {
+  path = "{{ vault_install_storage_filesystem_path }}"
+}
+{% elif vault_install_storage == "s3" %}
+storage "s3" {
+  access_key          = "{{ vault_install_storage_s3_access_key }}"
+  secret_key          = "{{ vault_install_storage_s3_secret_key }}"
+  bucket              = "{{ vault_install_storage_s3_bucket }}"
+  region              = "{{ vault_install_storage_s3_region }}"
+  endpoint            = "{{ vault_install_storage_s3_endpoint }}"
+  s3_force_path_style = "{{ vault_install_storage_s3_path_style }}"
+}
+{% endif %}

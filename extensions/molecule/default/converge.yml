@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Install Vault Server
+      ansible.builtin.include_role:
+        name: dubzland.vault.vault_install

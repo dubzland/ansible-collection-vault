@@ -1,0 +1,77 @@
+---
+- name: Ensure the custom facts directory exists
+  ansible.builtin.file:
+    path: /etc/ansible/facts.d
+    state: "directory"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Ensure the Vault system group exists
+  ansible.builtin.group:
+    name: "{{ vault_install_system_group }}"
+    system: true
+    state: present
+
+- name: Ensure the Vault system user exists
+  ansible.builtin.user:
+    name: "{{ vault_install_system_user }}"
+    system: true
+    create_home: false
+    shell: /sbin/nologin
+    group: "{{ vault_install_system_group }}"
+    state: present
+
+- name: Ensure storage directory has the proper permissions
+  ansible.builtin.file:
+    path: "{{ vault_install_storage_filesystem_path }}"
+    state: directory
+    owner: "{{ vault_install_system_user }}"
+    group: "{{ vault_install_system_group }}"
+    mode: "0750"
+  when: "vault_install_storage == 'filesystem'"
+
+- name: Ensure Vault prerequisite packages are installed
+  ansible.builtin.package:
+    name: "{{ vault_install_prerequisites }}"
+    state: present
+
+- name: Assign the Vault architectures
+  ansible.builtin.set_fact:
+    _vault_architectures:
+      x86_64: amd64
+
+- name: Ensure the Vault binary is present
+  ansible.builtin.unarchive:
+    src: "{{ vault_install_download_url }}"
+    dest: /usr/local/bin
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0775'
+
+- name: Ensure the Vault systemd unit exists
+  ansible.builtin.template:
+    src: etc/systemd/system/vault.service.j2
+    dest: /etc/systemd/system/vault.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Enable Vault
+
+- name: Trigger handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure the Vault configuration file exists
+  ansible.builtin.template:
+    src: etc/vault.hcl.j2
+    dest: /etc/vault.hcl
+    owner: "{{ vault_install_system_user }}"
+    group: "{{ vault_install_system_group }}"
+    mode: '0640'
+  notify: Restart Vault
+
+- name: Ensure Vault is running
+  ansible.builtin.systemd:
+    name: vault
+    state: started

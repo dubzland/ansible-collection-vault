@@ -1,0 +1,42 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: "Stat /usr/local/bin/vault"
+      ansible.builtin.stat:
+        path: "/usr/local/bin/vault"
+      register: vault_bin
+
+    - name: "Ensure /usr/local/bin/vault exists"
+      ansible.builtin.assert:
+        that:
+          - vault_bin.stat.exists == True
+        success_msg: "/usr/local/bin/vault exists"
+        fail_msg: "/usr/local/bin/vault doesn't exist"
+
+    - name: "Stat /etc/systemd/system/vault.service"
+      ansible.builtin.stat:
+        path: "/etc/systemd/system/vault.service"
+      register: vault_systemd_unit
+
+    - name: "Ensure /etc/systemd/system/vault.service exists"
+      ansible.builtin.assert:
+        that:
+          - vault_systemd_unit.stat.exists == True
+        success_msg: "/etc/systemd/system/vault.service exists"
+        fail_msg: "/etc/systemd/system/vault.service doesn't exist"
+
+    - name: "Check vault service state"
+      ansible.builtin.systemd:
+        name: vault
+        state: started
+      check_mode: True
+      register: vault_service_state
+
+    - name: "Ensure the vault service is running"
+      ansible.builtin.assert:
+        that:
+          - vault_service_state.state == "started"
+        success_msg: "vault service is running"
+        fail_msg: "vault service is NOT RUNNING"
