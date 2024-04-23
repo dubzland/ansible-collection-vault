@@ -59,9 +59,6 @@
     mode: '0644'
   notify: Enable Vault
 
-- name: Trigger handlers
-  ansible.builtin.meta: flush_handlers
-
 - name: Ensure the Vault configuration file exists
   ansible.builtin.template:
     src: etc/vault.hcl.j2
@@ -70,6 +67,9 @@
     group: "{{ vault_install_system_group }}"
     mode: '0640'
   notify: Restart Vault
+
+- name: Trigger handlers
+  ansible.builtin.meta: flush_handlers
 
 - name: Ensure Vault is running
   ansible.builtin.systemd:
