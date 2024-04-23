@@ -1,0 +1,2 @@
+---
+vault_init_tokens_directory: "{{ playbook_dir }}/vault-tokens"

@@ -1,0 +1,47 @@
+---
+- name: Ensure unseal directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+  delegate_to: localhost
+  become: false
+  loop:
+    - "{{ vault_init_tokens_directory }}"
+    - "{{ vault_init_tokens_directory }}/unseal"
+
+- name: Generate Vault tokens
+  ansible.builtin.command:
+    cmd: vault operator init -key-shares=5 -key-threshold=3 -format json
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+  register: _vault_init_results
+  when: "ansible_local.vault.default.initialized is not defined"
+
+- name: Record the Vault initialization information
+  community.general.ini_file:
+    path: /etc/ansible/facts.d/vault.fact
+    section: default
+    option: initialized
+    value: "true"
+
+- name: Parse Vault token output
+  set_fact:
+    _vault_init_parsed: "{{ _vault_init_results.stdout | from_json }}"
+  when: _vault_init_results is changed
+
+- name: Ensure local root key is present
+  ansible.builtin.copy:
+    content: "{{ _vault_init_parsed.root_token }}"
+    dest: "{{ vault_init_tokens_directory }}/rootkey"
+  delegate_to: localhost
+  become: false
+  when: _vault_init_results is changed
+
+- name: Ensure local unseal keys are present
+  ansible.builtin.copy:
+    dest: "{{ vault_init_tokens_directory }}/unseal/key_{{ item.0 }}"
+    content: "{{ item.1 }}"
+  with_indexed_items: "{{ _vault_init_parsed.unseal_keys_hex }}"
+  delegate_to: localhost
+  become: false
+  when: _vault_init_results is changed
