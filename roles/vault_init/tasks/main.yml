@@ -34,6 +34,7 @@
     content: "{{ _vault_init_parsed.root_token }}"
     dest: "{{ vault_init_tokens_directory }}/rootkey"
   delegate_to: localhost
+  no_log: true
   become: false
   when: _vault_init_results is changed
 
@@ -43,5 +44,6 @@
     content: "{{ item.1 }}"
   with_indexed_items: "{{ _vault_init_parsed.unseal_keys_hex }}"
   delegate_to: localhost
+  no_log: true
   become: false
   when: _vault_init_results is changed
