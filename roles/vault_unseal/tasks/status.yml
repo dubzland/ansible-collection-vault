@@ -1,0 +1,17 @@
+---
+- name: Retrieve the current Vault status
+  ansible.builtin.command:
+    cmd: "vault status -format=json"
+  environment:
+    VAULT_ADDR: "{{ vault_unseal_addr }}"
+  register: _vault_status
+  failed_when: "_vault_status.rc not in [0,2]"
+  changed_when: false
+
+- name: Assign the Vault status facts
+  ansible.builtin.set_fact:
+    _vault_sealed: "{{ _vault_status_json | json_query('sealed') | bool }}"
+    _vault_total_shares: "{{ _vault_status_json | json_query('n') | int}}"
+    _vault_threshold: "{{ _vault_status_json | json_query('t') | int }}"
+  vars:
+    _vault_status_json: "{{ _vault_status.stdout | from_json }}"

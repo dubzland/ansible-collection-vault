@@ -1,2 +1,3 @@
 ---
+vault_unseal_addr: http://127.0.0.1:8200
 vault_unseal_tokens_directory: "{{ playbook_dir }}/vault-tokens"
