@@ -91,6 +91,7 @@ sanity-release:
     - docker login -u $CI_DEPENDENCY_PROXY_USER -p $CI_DEPENDENCY_PROXY_PASSWORD $CI_DEPENDENCY_PROXY_SERVER
     - echo -e "[global]\ncache-dir = $PIP_CACHE_DIR" > /etc/pip.conf
     - python -m pip install https://github.com/ansible/ansible/archive/${ANSIBLE_VERSION}.tar.gz
+    - python -m pip install -r requirements.txt
     - python -m pip install -r requirements-test.txt
     - cd extensions
   script:
