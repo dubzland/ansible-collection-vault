@@ -2,4 +2,5 @@ __pycache__/
 *.un~
 .cache/
 .venv
-tests/output/
+/tests/output/
+/extensions/molecule/default/vault-tokens/

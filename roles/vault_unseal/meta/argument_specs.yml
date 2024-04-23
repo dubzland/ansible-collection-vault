@@ -1,0 +1,12 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Unseals a L(HashiCorp Vault,https://www.hashicorp.com/products/vault) server installation.
+    description:
+      - Unseals the installation using keys in the specified local directory.
+    options:
+      vault_unseal_tokens_directory:
+        type: path
+        default: "{{ playbook_dir }}/vault-tokens"
+        description: Directory on the control machine containing unseal tokens.

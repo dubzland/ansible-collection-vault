@@ -6,3 +6,4 @@
   roles:
     - role: vault_install
     - role: vault_init
+    - role: vault_unseal

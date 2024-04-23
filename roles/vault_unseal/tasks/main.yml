@@ -1,0 +1,25 @@
+---
+- name: Read unseal key contents
+  ansible.builtin.command:
+    cmd: cat {{ item }}
+  with_fileglob: "{{ vault_unseal_tokens_directory }}/unseal/*"
+  register: _vault_unseal_keys
+  delegate_to: localhost
+  become: no
+  when: "ansible_local.vault.default.unsealed is not defined"
+
+- name: Unseal Vault with unseal keys
+  ansible.builtin.command:
+    cmd: "vault operator unseal {{ item.stdout }}"
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+  with_items: "{{ _vault_unseal_keys.results }}"
+  when: "ansible_local.vault.default.unsealed is not defined"
+
+- name: Record the Vault initialization information
+  community.general.ini_file:
+    path: /etc/ansible/facts.d/vault.fact
+    section: default
+    option: unsealed
+    value: "true"
+  when: "ansible_local.vault.default.unsealed is not defined"

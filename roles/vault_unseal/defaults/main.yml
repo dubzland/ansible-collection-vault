@@ -1,0 +1,2 @@
+---
+vault_unseal_tokens_directory: "{{ playbook_dir }}/vault-tokens"
