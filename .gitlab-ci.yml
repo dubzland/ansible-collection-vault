@@ -22,8 +22,39 @@ stages:
     paths:
       - .cache/pip/
 
+.minimal-ci:
+  variables:
+    PYTHON_VERSION: "3.12"
+    ANSIBLE_VERSION: "stable-2.16"
+
+.full-ci:
+  parallel:
+    matrix:
+      - PYTHON_VERSION: "3.9"
+        ANSIBLE_VERSION:
+          - "stable-2.14"
+          - "stable-2.15"
+      - PYTHON_VERSION: "3.10"
+        ANSIBLE_VERSION:
+          - "stable-2.14"
+          - "stable-2.15"
+          - "stable-2.16"
+          - "devel"
+          - "milestone"
+      - PYTHON_VERSION: "3.11"
+        ANSIBLE_VERSION:
+          - "stable-2.14"
+          - "stable-2.15"
+          - "stable-2.16"
+          - "devel"
+          - "milestone"
+      - PYTHON_VERSION: "3.12"
+        ANSIBLE_VERSION:
+          - "stable-2.16"
+          - "devel"
+          - "milestone"
+
 .sanity:
-  extends: .ansible
   stage: lint
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/jdubz/ci-python:${PYTHON_VERSION}
   before_script:
@@ -36,52 +67,7 @@ stages:
     reports:
       junit: tests/output/**/*.xml
 
-sanity:
-  extends: .sanity
-  variables:
-    PYTHON_VERSION: "3.12"
-    ANSIBLE_VERSION: "stable-2.16"
-  only:
-    refs:
-      - merge_requests
-      - main
-
-sanity-release:
-  extends: .sanity
-  parallel:
-    matrix:
-      - PYTHON_VERSION: "3.9"
-        ANSIBLE_VERSION:
-          - "stable-2.14"
-          - "stable-2.15"
-      - PYTHON_VERSION: "3.10"
-        ANSIBLE_VERSION:
-          - "stable-2.14"
-          - "stable-2.15"
-          - "stable-2.16"
-          - "stable-2.17"
-          - "devel"
-          - "milestone"
-      - PYTHON_VERSION: "3.11"
-        ANSIBLE_VERSION:
-          - "stable-2.14"
-          - "stable-2.15"
-          - "stable-2.16"
-          - "stable-2.17"
-          - "devel"
-          - "milestone"
-      - PYTHON_VERSION: "3.12"
-        ANSIBLE_VERSION:
-          - "stable-2.16"
-          - "stable-2.17"
-          - "devel"
-          - "milestone"
-  only:
-    refs:
-      - tags
-
 .molecule:
-  extends: .ansible
   stage: test
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/jdubz/ci-python:${PYTHON_VERSION}-docker
   services:
@@ -96,47 +82,77 @@ sanity-release:
   script:
     - molecule test
 
+sanity:
+  extends:
+    - .ansible
+    - .minimal-ci
+    - .sanity
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+sanity-release:
+  extends:
+    - .ansible
+    - .full-ci
+    - .sanity
+  rules:
+    - if: $CI_COMMIT_TAG
+
 molecule:
-  extends: .molecule
-  variables:
-    PYTHON_VERSION: "3.12"
-    ANSIBLE_VERSION: "stable-2.16"
-  only:
-    refs:
-      - merge_requests
-      - main
+  extends:
+    - .ansible
+    - .minimal-ci
+    - .molecule
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        paths:
+          - molecule/**/*
+          - roles/**/*
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 molecule-release:
-  extends: .molecule
-  parallel:
-    matrix:
-      - PYTHON_VERSION: "3.9"
-        ANSIBLE_VERSION:
-          - "stable-2.15"
-      - PYTHON_VERSION: "3.10"
-        ANSIBLE_VERSION:
-          - "stable-2.15"
-          - "stable-2.16"
-          - "devel"
-          - "milestone"
-      - PYTHON_VERSION: "3.11"
-        ANSIBLE_VERSION:
-          - "stable-2.15"
-          - "stable-2.16"
-          - "devel"
-          - "milestone"
-      - PYTHON_VERSION: "3.12"
-        ANSIBLE_VERSION:
-          - "stable-2.16"
-          - "devel"
-          - "milestone"
-  only:
-    refs:
-      - tags
+  extends:
+    - .ansible
+    - .full-ci
+    - .molecule
+  rules:
+    - if: $CI_COMMIT_TAG
+      changes:
+        paths:
+          - molecule/**/*
+          - roles/**/*
+
+docs:
+  extends: .ansible
+  stage: test
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/jdubz/ci-python:3.12
+  variables:
+    ANSIBLE_COLLECTIONS_PATH: $CI_BUILDS_DIR/ansible/collections
+  before_script:
+    - apk add rsync
+    - python -m pip install -r requirements-dev.txt
+  script:
+    - set -e
+    - mkdir dest
+    - |
+      antsibull-docs sphinx-init \
+        --use-current \
+        --dest-dir dest \
+        dubzland.gitlab
+    - cd dest
+    - pip install -r requirements.txt
+    - ./build.sh
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 build:
   stage: build
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/jdubz/ci-python:3.10
+  variables:
+    ANSIBLE_COLLECTIONS_PATH: $CI_BUILDS_DIR/ansible/collections
   cache:
     paths:
       - .cache/pip/
@@ -156,16 +172,14 @@ build:
   artifacts:
     paths:
       - "${CI_PROJECT_NAMESPACE}-vault-${CI_COMMIT_TAG}.tar.gz"
-  only:
-    refs:
-      - tags
-
+  rules:
+    - if: $CI_COMMIT_TAG
 
 release:
   stage: deploy
   image: registry.gitlab.com/gitlab-org/release-cli:latest
-  rules:
-    - if: $CI_COMMIT_TAG
+  variables:
+    ANSIBLE_COLLECTIONS_PATH: $CI_BUILDS_DIR/ansible/collections
   script:
     - |
       release-cli create --name "Release $CI_COMMIT_TAG" \
@@ -173,10 +187,14 @@ release:
         --tag-name $CI_COMMIT_TAG \
         --assets-link "{\"name\":\"${CI_PROJECT_NAMESPACE}-vault-${CI_COMMIT_TAG}.tar.gz\",\"url\":\"${PACKAGE_REGISTRY_URL}/${CI_PROJECT_NAMESPACE}-vault/${CI_COMMIT_TAG}/${CI_PROJECT_NAMESPACE}-vault-${CI_COMMIT_TAG}.tar.gz\"}" \
         --assets-link "{\"name\":\"${CI_PROJECT_NAMESPACE}-vault-${CI_COMMIT_TAG}.tar.gz.sha256sum\",\"url\":\"${PACKAGE_REGISTRY_URL}/${CI_PROJECT_NAMESPACE}-vault/${CI_COMMIT_TAG}/${CI_PROJECT_NAMESPACE}-vault-${CI_COMMIT_TAG}.tar.gz.sha256sum\"}" \
+  rules:
+    - if: $CI_COMMIT_TAG
 
 galaxy:
   stage: deploy
   image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/jdubz/ci-python:3.10
+  variables:
+    ANSIBLE_COLLECTIONS_PATH: $CI_BUILDS_DIR/ansible/collections
   cache:
     paths:
       - .cache/pip/
@@ -186,6 +204,11 @@ galaxy:
     - python -m pip install ansible-core
   script:
     - ansible-galaxy collection publish --token "$GALAXY_API_TOKEN" "./${CI_PROJECT_NAMESPACE}-vault-${CI_COMMIT_REF_NAME}.tar.gz"
-  only:
-    refs:
-      - tags
+  rules:
+    - if: $CI_COMMIT_TAG
+
+release-docs:
+  stage: deploy
+  trigger: docs/ansible-collections
+  rules:
+    - if: $CI_COMMIT_TAG
