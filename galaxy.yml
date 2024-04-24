@@ -6,8 +6,7 @@ readme: README.md
 authors:
   - Josh Williams <jdubz@dubzland.com>
 description: Installs and configures the HashiCorp Vault secret server.
-license:
-  - MIT
+license_file: LICENSE
 tags:
   - linux
   - debian
