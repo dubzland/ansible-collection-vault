@@ -1,0 +1,60 @@
+---
+- name: Ensure Vault prerequisite packages are installed
+  ansible.builtin.package:
+    name: "{{ vault_server_prerequisites }}"
+    state: present
+
+- name: Ensure the Vault system group exists
+  ansible.builtin.group:
+    name: "{{ vault_server_system_group }}"
+    system: true
+    state: present
+
+- name: Ensure the Vault system user exists
+  ansible.builtin.user:
+    name: "{{ vault_server_system_user }}"
+    system: true
+    create_home: false
+    shell: /sbin/nologin
+    group: "{{ vault_server_system_group }}"
+    state: present
+
+- name: Ensure storage directory has the proper permissions
+  ansible.builtin.file:
+    path: "{{ vault_server_storage_filesystem_path }}"
+    state: directory
+    owner: "{{ vault_server_system_user }}"
+    group: "{{ vault_server_system_group }}"
+    mode: "0750"
+  when: "vault_server_storage == 'filesystem'"
+
+- name: Ensure Vault prerequisite packages are installed
+  ansible.builtin.package:
+    name: "{{ vault_server_prerequisites }}"
+    state: present
+
+- name: Ensure the Vault systemd unit exists
+  ansible.builtin.template:
+    src: etc/systemd/system/vault.service.j2
+    dest: /etc/systemd/system/vault.service
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Enable Vault
+
+- name: Ensure the Vault configuration file exists
+  ansible.builtin.template:
+    src: etc/vault.hcl.j2
+    dest: /etc/vault.hcl
+    owner: "{{ vault_server_system_user }}"
+    group: "{{ vault_server_system_group }}"
+    mode: '0640'
+  notify: Restart Vault
+
+- name: Trigger handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure Vault is running
+  ansible.builtin.systemd:
+    name: vault
+    state: started

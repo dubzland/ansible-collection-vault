@@ -18,8 +18,8 @@
   when: "ansible_local.vault.default.initialized is not defined"
 
 - name: Record the Vault initialization information
-  community.general.ini_file:
-    path: /etc/ansible/facts.d/vault.fact
+  dubzland.utils.set_persistent_fact:
+    component: vault
     section: default
     option: initialized
     value: "true"

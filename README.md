@@ -22,11 +22,12 @@ Also tested against the current development version of `ansible-core`.
 
 ### Roles
 
-| Name                                          | Description                                                |
-| --------------------------------------------- | ---------------------------------------------------------- |
-| [dubzland.vault.vault_install][vault_install] | Installs and configures the Vault service                  |
-| [dubzland.vault.vault_init][vault_init]       | Performs initial initialization on the Vault installation  |
-| [dubzland.vault.vault_unseal][vault_unseal]   | Unseals the Vault                                          |
+| Name                                          | Description                                               |
+| --------------------------------------------- | --------------------------------------------------------- |
+| [dubzland.vault.vault_install][vault_install] | Installs the Vault binary                                 |
+| [dubzland.vault.vault_server][vault_server]   | Configures the Vault server system service                |
+| [dubzland.vault.vault_init][vault_init]       | Performs initial initialization on the Vault installation |
+| [dubzland.vault.vault_unseal][vault_unseal]   | Unseals the Vault                                         |
 
 ## Licensing
 
@@ -40,5 +41,6 @@ See [LICENSE](https://git.dubzland.com/dubzland/ansible-collection-vault/blob/ma
 
 [vault]: https://www.hashicorp.com/products/vault
 [vault_install]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_install_role.html
+[vault_server]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_server_role.html
 [vault_init]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_init_role.html
 [vault_unseal]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_unseal_role.html

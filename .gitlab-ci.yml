@@ -93,7 +93,6 @@ sanity-release:
     - python -m pip install https://github.com/ansible/ansible/archive/${ANSIBLE_VERSION}.tar.gz
     - python -m pip install -r requirements.txt
     - python -m pip install -r requirements-test.txt
-    - cd extensions
   script:
     - molecule test
 

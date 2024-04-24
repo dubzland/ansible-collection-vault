@@ -1,0 +1,23 @@
+{% if vault_server_enable_ui %}
+ui = true
+{% endif %}
+
+listener "tcp" {
+  address     = "{{ vault_server_listen_address }}:{{ vault_server_listen_port }}"
+  tls_disable = 1
+}
+
+{% if vault_server_storage == "filesystem" %}
+storage "file" {
+  path = "{{ vault_server_storage_filesystem_path }}"
+}
+{% elif vault_server_storage == "s3" %}
+storage "s3" {
+  access_key          = "{{ vault_server_storage_s3_access_key }}"
+  secret_key          = "{{ vault_server_storage_s3_secret_key }}"
+  bucket              = "{{ vault_server_storage_s3_bucket }}"
+  region              = "{{ vault_server_storage_s3_region }}"
+  endpoint            = "{{ vault_server_storage_s3_endpoint }}"
+  s3_force_path_style = "{{ vault_server_storage_s3_path_style }}"
+}
+{% endif %}

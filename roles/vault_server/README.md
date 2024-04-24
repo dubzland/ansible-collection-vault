@@ -1,6 +1,6 @@
-# Ansible Role: HashiCorp Vault Installation
+# Ansible Role: HashiCorp Vault Server
 
-Install and configure the HashiCorp Vault secret management binary.
+Configures HashiCorp Vault server as a system service.
 
 ## Usage
 
@@ -14,13 +14,14 @@ Then apply the role using the following playbook:
 
 ```yaml
 ---
-- hosts: vault_hosts
+- hosts: vault_servers
 
   collections:
     - dubzland.vault
 
   roles:
     - role: vault_install
+    - role: vault_server
 ```
 
 ## Documentation
@@ -34,3 +35,4 @@ MIT
 ## Author
 
 - [Josh Williams](https://dubzland.com)
+

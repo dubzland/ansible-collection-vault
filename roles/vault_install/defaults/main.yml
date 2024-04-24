@@ -1,18 +1,2 @@
 ---
 vault_install_version: 1.16.0
-
-vault_install_enable_ui: true
-
-vault_install_listen_address: 0.0.0.0
-vault_install_listen_port: 8200
-
-vault_install_storage: filesystem
-
-vault_install_storage_filesystem_path: /srv/vault/data
-
-# vault_install_storage_s3_access_key: CHANGEME
-# vault_install_storage_s3_secret_key: CHANGEME
-# vault_install_storage_s3_bucket: vault-secrets
-# vault_install_storage_s3_region: us-east-1
-# vault_install_storage_s3_endpoint: 
-# vault_install_storage_s3_path_style: false

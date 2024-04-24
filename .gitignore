@@ -3,4 +3,4 @@ __pycache__/
 .cache/
 .venv
 /tests/output/
-/extensions/molecule/default/vault-tokens/
+/molecule/default/vault-tokens/

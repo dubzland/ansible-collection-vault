@@ -16,6 +16,7 @@ tags:
 
 dependencies:
   "community.general": "*"
+  "dubzland.utils": "*"
 
 repository: https://git.dubzland.com/dubzland/ansible-collection-vault
 

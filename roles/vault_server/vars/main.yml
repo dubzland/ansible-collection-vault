@@ -1,0 +1,5 @@
+---
+vault_server_prerequisites:
+  - libcap2-bin
+vault_server_system_group: vault
+vault_server_system_user: vault
