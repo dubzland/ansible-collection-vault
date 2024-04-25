@@ -8,10 +8,15 @@
   failed_when: "_vault_status.rc not in [0,2]"
   changed_when: false
 
+- name: Parse the current Vault status
+  ansible.builtin.set_fact:
+    _vault_status_json: "{{ _vault_status.stdout | ansible.builtin.from_json }}"
+
 - name: Assign the Vault status facts
   ansible.builtin.set_fact:
-    _vault_sealed: "{{ _vault_status_json | json_query('sealed') | bool }}"
-    _vault_total_shares: "{{ _vault_status_json | json_query('n') | int}}"
-    _vault_threshold: "{{ _vault_status_json | json_query('t') | int }}"
-  vars:
-    _vault_status_json: "{{ _vault_status.stdout | from_json }}"
+    _vault_sealed: >-
+      "{{ _vault_status_json | community.general.json_query('sealed') | bool }}"
+    _vault_total_shares: >-
+      "{{ _vault_status_json | community.general.json_query('n') | int }}"
+    _vault_threshold: >-
+      "{{ _vault_status_json | community.general.json_query('t') | int }}"

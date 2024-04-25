@@ -12,5 +12,5 @@ vault_server_storage_filesystem_path: /srv/vault/data
 # vault_server_storage_s3_secret_key: CHANGEME
 # vault_server_storage_s3_bucket: vault-secrets
 # vault_server_storage_s3_region: us-east-1
-# vault_server_storage_s3_endpoint: 
+# vault_server_storage_s3_endpoint:
 # vault_server_storage_s3_path_style: false
