@@ -2,7 +2,8 @@
 argument_specs:
   main:
     short_description: >-
-      Installs the L(HashiCorp Vault,https://www.hashicorp.com/products/vault) binary.
+      Installs the L(HashiCorp Vault,https://www.hashicorp.com/products/vault)
+      binary.
     description:
       - Downloads the Vault server binary (B(vault)).
       - Creates a system user and group for running the B(vault) service.

@@ -1,8 +1,9 @@
 ---
 - name: Ensure unseal directories exist
-  file:
+  ansible.builtin.file:
     path: "{{ item }}"
     state: directory
+    mode: "0770"
   delegate_to: localhost
   become: false
   loop:
@@ -13,9 +14,34 @@
   ansible.builtin.command:
     cmd: vault operator init -key-shares=5 -key-threshold=3 -format json
   environment:
-    VAULT_ADDR: "http://127.0.0.1:8200"
+    VAULT_ADDR: http://127.0.0.1:8200
   register: _vault_init_results
-  when: "ansible_local.vault.default.initialized is not defined"
+  changed_when: true
+  when: ansible_local.vault.default.initialized is not defined
+
+- name: Parse Vault token output
+  ansible.builtin.set_fact:
+    _vault_init_parsed: "{{ _vault_init_results.stdout | from_json }}"
+  when: ansible_local.vault.default.initialized is not defined
+
+- name: Ensure local root key is present
+  ansible.builtin.copy:
+    content: "{{ _vault_init_parsed.root_token }}"
+    dest: "{{ vault_init_tokens_directory }}/rootkey"
+    mode: "0640"
+  delegate_to: localhost
+  become: false
+  when: ansible_local.vault.default.initialized is not defined
+
+- name: Ensure local unseal keys are present
+  ansible.builtin.copy:
+    dest: "{{ vault_init_tokens_directory }}/unseal/key_{{ item.0 }}"
+    content: "{{ item.1 }}"
+    mode: "0640"
+  with_indexed_items: "{{ _vault_init_parsed.unseal_keys_hex }}"
+  delegate_to: localhost
+  become: false
+  when: ansible_local.vault.default.initialized is not defined
 
 - name: Record the Vault initialization information
   dubzland.utils.set_persistent_fact:
@@ -23,27 +49,3 @@
     section: default
     option: initialized
     value: "true"
-
-- name: Parse Vault token output
-  set_fact:
-    _vault_init_parsed: "{{ _vault_init_results.stdout | from_json }}"
-  when: _vault_init_results is changed
-
-- name: Ensure local root key is present
-  ansible.builtin.copy:
-    content: "{{ _vault_init_parsed.root_token }}"
-    dest: "{{ vault_init_tokens_directory }}/rootkey"
-  delegate_to: localhost
-  no_log: true
-  become: false
-  when: _vault_init_results is changed
-
-- name: Ensure local unseal keys are present
-  ansible.builtin.copy:
-    dest: "{{ vault_init_tokens_directory }}/unseal/key_{{ item.0 }}"
-    content: "{{ item.1 }}"
-  with_indexed_items: "{{ _vault_init_parsed.unseal_keys_hex }}"
-  delegate_to: localhost
-  no_log: true
-  become: false
-  when: _vault_init_results is changed

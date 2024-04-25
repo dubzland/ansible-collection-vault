@@ -2,7 +2,9 @@
 argument_specs:
   main:
     short_description: >-
-      Initializes the L(HashiCorp Vault,https://www.hashicorp.com/products/vault) server installation.
+      Initializes the
+      L(HashiCorp Vault,https://www.hashicorp.com/products/vault) server
+      installation.
     description:
       - Initializes and retrieves the Root Vault token and unseal tokens.
     options:

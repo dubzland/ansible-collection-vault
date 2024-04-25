@@ -1,10 +1,8 @@
 ---
 - name: Converge
   hosts: all
-  collections:
-    - dubzland.vault
   roles:
-    - role: vault_install
-    - role: vault_server
-    - role: vault_init
-    - role: vault_unseal
+    - role: dubzland.vault.vault_install
+    - role: dubzland.vault.vault_server
+    - role: dubzland.vault.vault_init
+    - role: dubzland.vault.vault_unseal

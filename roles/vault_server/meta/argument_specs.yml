@@ -2,7 +2,8 @@
 argument_specs:
   main:
     short_description: >-
-      Configures the L(HashiCorp Vault,https://www.hashicorp.com/products/vault) systemd server.
+      Configures the L(HashiCorp Vault,https://www.hashicorp.com/products/vault)
+      systemd server.
     description:
       - Creates a system user and group for running the B(vault) service.
       - Adds a systemd unit for managing the B(vault) service.
@@ -30,7 +31,9 @@ argument_specs:
       vault_server_storage_filesystem_path:
         type: path
         default: /srv/vault/data
-        description: Filesystem path used by Vault when O(vault_server_storage) is V(filesystem).
+        description: >-
+          Filesystem path used by Vault when O(vault_server_storage) is
+          V(filesystem).
       vault_server_storage_s3_access_key:
         type: str
         description: S3 Access key.
@@ -48,4 +51,5 @@ argument_specs:
         description: Endpoint used for private S3 type installations.
       vault_server_storage_s3_path_style:
         type: str
-        description: Many S3 private installations (Minio, Swift, etc) use path style.
+        description: >-
+          Many S3 private installations (Minio, Swift, etc) use path style.

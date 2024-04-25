@@ -1,7 +1,8 @@
 ---
 - name: Assign the unseal key file
   ansible.builtin.set_fact:
-    _unseal_key_file: "{{ vault_unseal_tokens_directory }}/unseal/key_{{ _unseal_index }}"
+    _unseal_key_file: >-
+      {{ vault_unseal_tokens_directory }}/unseal/key_{{ _unseal_index }}
   when: _vault_sealed
 
 - name: Unseal Vault with unseal keys
@@ -9,6 +10,7 @@
     cmd: "vault operator unseal {{ lookup('file', _unseal_key_file) }}"
   environment:
     VAULT_ADDR: "{{ vault_unseal_addr }}"
+  changed_when: true
   when: _vault_sealed
 
 - name: Retrieve the current unseal status

@@ -12,16 +12,16 @@
     group: root
     mode: "0755"
 
-- name: Assign the Vault architectures
+- name: Assign the Vault architecture
   ansible.builtin.set_fact:
-    _vault_architectures:
-      x86_64: amd64
+    _vault_architecture: >-
+      {{ vault_install_architecture_map[ansible_architecture] }}
 
 - name: Ensure the Vault binary is present
   ansible.builtin.unarchive:
     src: "{{ vault_install_download_url }}"
     dest: "{{ vault_install_destination }}"
-    remote_src: yes
+    remote_src: true
     owner: root
     group: root
     mode: '0775'

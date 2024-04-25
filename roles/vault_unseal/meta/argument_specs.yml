@@ -2,7 +2,8 @@
 argument_specs:
   main:
     short_description: >-
-      Unseals a L(HashiCorp Vault,https://www.hashicorp.com/products/vault) server installation.
+      Unseals a L(HashiCorp Vault,https://www.hashicorp.com/products/vault)
+      server installation.
     description:
       - Unseals the installation using keys in the specified local directory.
     options:
