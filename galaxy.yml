@@ -17,17 +17,17 @@ dependencies:
   "community.general": "*"
   "dubzland.utils": "*"
 
-repository: https://git.dubzland.com/dubzland/ansible-collection-vault
+repository: https://git.dubzland.com/dubzland/ansible-collection/ault
 
 # The URL to any online docs
 documentation: |
   https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/
 
 # The URL to the homepage of the collection/project
-homepage: https://git.dubzland.com/dubzland/ansible-collection-vault
+homepage: https://git.dubzland.com/dubzland/ansible-collections/vault
 
 # The URL to the collection issue tracker
-issues: https://git.dubzland.com/dubzland/ansible-collection-vault/-/issues
+issues: https://git.dubzland.com/dubzland/ansible-collections/vault/-/issues
 build_ignore:
   - .ansible-lint
   - .cache
