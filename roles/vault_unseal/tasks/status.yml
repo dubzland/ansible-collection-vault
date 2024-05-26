@@ -14,9 +14,6 @@
 
 - name: Assign the Vault status facts
   ansible.builtin.set_fact:
-    _vault_sealed: >-
-      "{{ _vault_status_json | community.general.json_query('sealed') | bool }}"
-    _vault_total_shares: >-
-      "{{ _vault_status_json | community.general.json_query('n') | int }}"
-    _vault_threshold: >-
-      "{{ _vault_status_json | community.general.json_query('t') | int }}"
+    _vault_sealed: "{{ _vault_status_json.sealed }}"
+    _vault_total_shares: "{{ _vault_status_json.n }}"
+    _vault_threshold: "{{ _vault_status_json.t }}"

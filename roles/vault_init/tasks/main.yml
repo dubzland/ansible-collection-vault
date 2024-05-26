@@ -10,6 +10,11 @@
     - "{{ vault_init_tokens_directory }}"
     - "{{ vault_init_tokens_directory }}/unseal"
 
+- name: Assign the initialization status
+  ansible.builtin.set_fact:
+    _vault_initialized: |
+      "{{ ansible_local.vault.default.initialized | default(false) | bool }}"
+
 - name: Generate Vault tokens
   ansible.builtin.command:
     cmd: vault operator init -key-shares=5 -key-threshold=3 -format json
@@ -17,12 +22,12 @@
     VAULT_ADDR: http://127.0.0.1:8200
   register: _vault_init_results
   changed_when: true
-  when: ansible_local.vault.default.initialized is not defined
+  when: _vault_initialized is false
 
 - name: Parse Vault token output
   ansible.builtin.set_fact:
     _vault_init_parsed: "{{ _vault_init_results.stdout | from_json }}"
-  when: ansible_local.vault.default.initialized is not defined
+  when: _vault_initialized is false
 
 - name: Ensure local root key is present
   ansible.builtin.copy:
@@ -31,7 +36,7 @@
     mode: "0640"
   delegate_to: localhost
   become: false
-  when: ansible_local.vault.default.initialized is not defined
+  when: _vault_initialized is false
 
 - name: Ensure local unseal keys are present
   ansible.builtin.copy:
@@ -41,7 +46,7 @@
   with_indexed_items: "{{ _vault_init_parsed.unseal_keys_hex }}"
   delegate_to: localhost
   become: false
-  when: ansible_local.vault.default.initialized is not defined
+  when: _vault_initialized is false
 
 - name: Record the Vault initialization information
   dubzland.utils.set_persistent_fact:
