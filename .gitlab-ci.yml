@@ -15,6 +15,17 @@ sanity:
 sanity-release:
   extends: .ansible:sanity-release
 
+unit:
+  extends: .ansible:unit
+
+coverage:
+  extends: .ansible:coverage
+  needs:
+    - unit
+
+unit-release:
+  extends: .ansible:unit-release
+
 molecule:
   extends: .ansible:molecule
 
