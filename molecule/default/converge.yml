@@ -6,3 +6,14 @@
     - role: dubzland.vault.vault_server
     - role: dubzland.vault.vault_init
     - role: dubzland.vault.vault_unseal
+  post_tasks:
+    - name: Load the Vault root token
+      ansible.builtin.set_fact:
+        _vault_root_token: "{{ lookup('file', 'vault-tokens/rootkey') }}"
+    - name: Enable approle authentication
+      dubzland.vault.vault_auth_method:
+        method_type: approle
+        description: AppRole authentication
+        state: present
+        url: "http://localhost:8200"
+        token: "{{ _vault_root_token }}"

@@ -1,5 +1,7 @@
+httmock
 molecule >= 6.0.2
 molecule-plugins[docker] >= 23.5.0
 pytest
 pytest-mock
 pytest-ansible
+requests-mock
