@@ -8,13 +8,14 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import json
-
-from ansible.module_utils import basic
-from ansible.module_utils.common.text.converters import to_bytes
+from ._vault_common import VaultAuthMethod
 
 
-def set_module_args(args):
-    """prepare arguments so that they will be picked up during module creation"""
-    args = json.dumps({"ANSIBLE_MODULE_ARGS": args})
-    basic._ANSIBLE_ARGS = to_bytes(args)
+class VaultAuthMethodNone(VaultAuthMethod):
+    NAME = "none"
+
+    def validate(self):
+        pass
+
+    def authenticate(self, *args):
+        pass

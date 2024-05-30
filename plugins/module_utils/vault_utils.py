@@ -63,35 +63,6 @@ def vault_client(module):
     return client
 
 
-def vault_argument_spec(**kwargs):
-    argument_spec = dict(
-        auth_method=dict(
-            type="str",
-            default="token",
-            choices=[
-                "token",
-                "userpass",
-                "ldap",
-                "approle",
-                "aws_iam",
-                "azure",
-                "jwt",
-                "cert",
-                "none",
-            ],
-        ),
-        mount_point=dict(type="str"),
-        token=dict(type="str", no_log=True),
-        username=dict(type="str", no_log=True),
-        password=dict(type="str", no_log=True),
-        role_id=dict(type="str", no_log=True),
-        secret_id=dict(type="str", no_log=True),
-        url=dict(type="str", required=True),
-    )
-    argument_spec.update(**kwargs)
-    return argument_spec
-
-
 class AppRoleClient(object):
     """
     hvac.Client decorator which generates and sets a new approle token on every

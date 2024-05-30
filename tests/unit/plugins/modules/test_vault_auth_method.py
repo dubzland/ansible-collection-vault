@@ -8,89 +8,229 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import json
 import pytest
-import requests_mock
 
-from ansible_collections.dubzland.vault.plugins.modules.vault_auth_method import (
-    VaultAuthMethod,
+from ansible_collections.dubzland.vault.plugins.modules import vault_auth_method
+
+pytestmark = pytest.mark.usefixtures(
+    "patch_hvac_client",
 )
-
 
 from ansible_collections.dubzland.vault.tests.unit.plugins.modules.utils import (
-    ModuleTestCase,
-    mock_list_auth_methods,
-    mock_enable_auth_method,
-    mock_tune_auth_method,
-    mock_disable_auth_method,
+    set_module_args,
 )
 
 
-class TestVaultAuthMethod(ModuleTestCase):
-    def setUp(self):
-        super(TestVaultAuthMethod, self).setUp()
+@pytest.fixture
+def module_args():
+    return {
+        "url": "http://localhost:8200",
+        "token": "example-token",
+        "method_type": "approle",
+        "description": "Test AppRole authentication",
+    }
 
-        self.vault_instance.token = "test-auth-token"
 
-        self.moduleUtil = VaultAuthMethod(
-            module=self.mock_module, vault_instance=self.vault_instance
+@pytest.fixture
+def create_args(module_args):
+    args = module_args.copy()
+    args.update({"state": "present"})
+    return args
+
+
+@pytest.fixture
+def update_args(create_args):
+    args = create_args.copy()
+    args.update({"description": "Updated Description"})
+    return args
+
+
+@pytest.fixture
+def delete_args(create_args):
+    args = create_args.copy()
+    args.update({"state": "absent"})
+    return args
+
+
+@pytest.fixture
+def missing_json_response():
+    return {"data": {}}
+
+
+@pytest.fixture
+def create_json_response(create_args):
+    return {
+        "data": {"approle/": {"description": create_args["description"], "config": {}}}
+    }
+
+
+@pytest.fixture
+def update_json_response(update_args):
+    return {"data": {"approle/": {"description": update_args["description"]}}}
+
+
+class TestVaultAuthMethod:
+    def test_vault_auth_method_create(
+        self,
+        create_args,
+        missing_json_response,
+        create_json_response,
+        hvac_client,
+        capfd,
+    ):
+        hvac_client.sys.list_auth_methods.side_effect = [
+            missing_json_response,
+            create_json_response,
+        ]
+        hvac_client.sys.enable_auth_method.return_value = {}
+
+        set_module_args(create_args)
+        with pytest.raises(SystemExit) as e:
+            vault_auth_method.main()
+
+        out, *rest = capfd.readouterr()
+        result = json.loads(out)
+
+        hvac_client.sys.enable_auth_method.assert_called_once_with(
+            create_args["method_type"],
+            description=create_args["description"],
+            path="%s/" % create_args["method_type"],
+            config={},
         )
 
-    @pytest.fixture(autouse=True)
-    def _mocker(self, mocker):
-        self.mocker = mocker
-
-    @requests_mock.Mocker()
-    def test_auth_method_exists(self, m):
-        mock_list_auth_methods(
-            m,
-            resp={"valid-method/": {"description": "Valid auth method", "config": {}}},
+        assert e.value.code == 0
+        assert result["changed"] is True
+        assert (
+            result["msg"]
+            == "Successfully created or updated the authentication method %s/"
+            % create_args["method_type"]
         )
-        result = self.moduleUtil.exists_auth_method("valid-method")
+        auth_method = result["auth_method"]
+        assert auth_method["description"] == create_args["description"]
 
-        self.assertEqual(result, True)
+    def test_vault_auth_method_update(
+        self,
+        update_args,
+        create_json_response,
+        update_json_response,
+        hvac_client,
+        capfd,
+    ):
+        hvac_client.sys.list_auth_methods.side_effect = [
+            create_json_response,
+            update_json_response,
+        ]
+        hvac_client.sys.tune_auth_method.return_value = {}
 
-        result = self.moduleUtil.exists_auth_method("invalid-method")
+        set_module_args(update_args)
+        with pytest.raises(SystemExit) as e:
+            vault_auth_method.main()
 
-        self.assertEqual(result, False)
+        out, *rest = capfd.readouterr()
+        result = json.loads(out)
 
-    @requests_mock.Mocker()
-    def test_auth_method_create(self, m):
-        auth_method = "new-method"
-        description = "New auth method"
-
-        mock_enable_auth_method(m, auth_method)
-        mock_list_auth_methods(
-            m, resp={auth_method + "/": {"description": description, "config": {}}}
-        )
-
-        result = self.moduleUtil.create_auth_method(
-            auth_method, description=description
-        )
-
-        self.assertEqual(result.get("description"), description)
-
-    @requests_mock.Mocker()
-    def test_auth_method_update(self, m):
-        auth_method = "auth-method"
-        description = "Updated auth method"
-
-        mock_tune_auth_method(m, auth_method)
-        mock_list_auth_methods(
-            m, resp={auth_method + "/": {"description": description, "config": {}}}
+        hvac_client.sys.tune_auth_method.assert_called_once_with(
+            update_args["method_type"] + "/",
+            description=update_args["description"],
         )
 
-        result = self.moduleUtil.update_auth_method(
-            auth_method + "/", description=description
+        assert e.value.code == 0
+        assert result["changed"] is True
+        assert (
+            result["msg"]
+            == "Successfully created or updated the authentication method %s/"
+            % update_args["method_type"]
+        )
+        auth_method = result["auth_method"]
+        assert auth_method["description"] == update_args["description"]
+
+    def test_vault_auth_method_update_no_change(
+        self,
+        create_args,
+        create_json_response,
+        hvac_client,
+        capfd,
+    ):
+        hvac_client.sys.list_auth_methods.side_effect = [
+            create_json_response,
+            create_json_response,
+        ]
+        hvac_client.sys.tune_auth_method.return_value = {}
+
+        set_module_args(create_args)
+        with pytest.raises(SystemExit) as e:
+            vault_auth_method.main()
+
+        out, *rest = capfd.readouterr()
+        result = json.loads(out)
+
+        hvac_client.sys.tune_auth_method.assert_not_called()
+
+        assert e.value.code == 0
+        assert result["changed"] is False
+        assert (
+            result["msg"]
+            == "No changes to authentication method %s/" % create_args["method_type"]
+        )
+        auth_method = result["auth_method"]
+        assert auth_method["description"] == create_args["description"]
+
+    def test_vault_auth_method_delete(
+        self,
+        delete_args,
+        create_json_response,
+        hvac_client,
+        capfd,
+    ):
+        hvac_client.sys.list_auth_methods.side_effect = [
+            create_json_response,
+        ]
+        hvac_client.sys.disable_auth_method.return_value = {}
+
+        set_module_args(delete_args)
+        with pytest.raises(SystemExit) as e:
+            vault_auth_method.main()
+
+        out, *rest = capfd.readouterr()
+        result = json.loads(out)
+
+        hvac_client.sys.disable_auth_method.assert_called_once_with(
+            delete_args["method_type"] + "/"
         )
 
-        self.assertEqual(result.get("description"), description)
+        assert e.value.code == 0
+        assert result["changed"] is True
+        assert (
+            result["msg"]
+            == "Successfully deleted authentication method %s"
+            % delete_args["method_type"]
+            + "/"
+        )
 
-    @requests_mock.Mocker()
-    def test_auth_method_delete(self, m):
-        auth_method = "auth-method"
+    def test_vault_auth_method_delete_nochange(
+        self,
+        delete_args,
+        missing_json_response,
+        hvac_client,
+        capfd,
+    ):
+        hvac_client.sys.list_auth_methods.side_effect = [
+            missing_json_response,
+        ]
+        hvac_client.sys.disable_auth_method.return_value = {}
 
-        mock_disable_auth_method(m, auth_method)
+        set_module_args(delete_args)
+        with pytest.raises(SystemExit) as e:
+            vault_auth_method.main()
 
-        result = self.moduleUtil.delete_auth_method(auth_method + "/")
+        out, *rest = capfd.readouterr()
+        result = json.loads(out)
 
-        self.assertEqual(result, None)
+        hvac_client.sys.disable_auth_method.assert_not_called()
+
+        assert e.value.code == 0
+        assert result["changed"] is False
+        assert result["msg"] == "Authentication method %s deleted or does not exist" % (
+            delete_args["method_type"] + "/"
+        )

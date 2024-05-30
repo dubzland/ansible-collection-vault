@@ -94,7 +94,9 @@ options:
     default: present
     choices: [ "present", "absent" ]
     type: str
-extends_documentation_fragment: dubzland.vault.hvac_auth
+extends_documentation_fragment:
+  - dubzland.vault.auth
+  - dubzland.vault.connection
 """
 
 EXAMPLES = """
@@ -115,73 +117,16 @@ auth_method:
 """
 
 
-from ansible_collections.dubzland.vault.plugins.module_utils.hashicorp_vault import (
-    vault_client,
-    vault_argument_spec,
+from ansible_collections.dubzland.vault.plugins.module_utils.vault_utils import (
     is_state_changed,
 )
-
-from ansible.module_utils.basic import AnsibleModule
-
-
-class VaultAuthMethod(object):
-    def __init__(self, module, vault_instance):
-        self._module = module
-        self._vault = vault_instance
-        self.auth_method = None
-
-    def exists_auth_method(self, path):
-        response = self._vault.sys.list_auth_methods()
-        auth_methods = response.get("data")
-        return (path + "/") in auth_methods
-
-    def create_auth_method(self, method_type, description=None, path=None, config=None):
-        if path is None:
-            path = method_type + "/"
-
-        self._vault.sys.enable_auth_method(
-            method_type, description=description, path=path, config=config
-        )
-        response = self._vault.sys.list_auth_methods()
-        auth_method = response.get("data").get(path)
-        return auth_method
-
-    def update_auth_method(self, path, description=None, config=None):
-        self._vault.sys.tune_auth_method(path, description=description, **config)
-        response = self._vault.sys.list_auth_methods()
-        auth_method = response.get("data").get(path)
-        return auth_method
-
-    def delete_auth_method(self, path):
-        self._vault.sys.disable_auth_method(path)
-        return None
-
-    def create_or_update_auth_method(self, path, description, method_type, config):
-        changed = False
-        response = self._vault.sys.list_auth_methods()
-        auth_methods = response.get("data")
-        if (path + "/") in auth_methods:
-            self.auth_method = auth_methods.get(path + "/")
-            if description != self.auth_method["description"] or is_state_changed(
-                config, self.auth_method["config"]
-            ):
-                if not self._module.check_mode:
-                    self.auth_method = self.update_auth_method(
-                        path, description=description, **config
-                    )
-                changed = True
-        else:
-            if not self._module.check_mode:
-                self.auth_method = self.create_auth_method(
-                    method_type, description=description, path=path, config=config
-                )
-            changed = True
-
-        return changed
+from ansible_collections.dubzland.vault.plugins.module_utils.vault_module import (
+    VaultModule,
+)
 
 
 def main():
-    argument_spec = vault_argument_spec(
+    argument_spec = VaultModule.generate_argument_spec(
         method_type=dict(
             type="str", choices=["token", "userpass", "approle"], required=True
         ),
@@ -209,49 +154,76 @@ def main():
         ),
         state=dict(default="present", choices=["present", "absent"]),
     )
-    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+    module = VaultModule(argument_spec=argument_spec, supports_check_mode=True)
 
     path = module.params["path"]
     description = module.params["description"]
     method_type = module.params["method_type"]
-    config = {}
+    config = module.params["config"]
     state = module.params["state"]
+    changed = False
+    exists = False
 
     if path is None:
-        path = method_type
+        path = method_type + "/"
+    if config is None:
+        config = {}
 
-    client = vault_client(module)
+    client = module.hvac_client()
+    module.authenticator.validate()
+    module.authenticator.authenticate(client)
 
-    vault_auth_method = VaultAuthMethod(module, client)
+    response = client.sys.list_auth_methods()
+    auth_methods = response.get("data")
+    if (path) in auth_methods:
+        auth_method = auth_methods.get(path)
+        exists = True
 
     if state == "present":
-        if vault_auth_method.create_or_update_auth_method(
-            path, description, method_type, config
-        ):
+        if exists:
+            if description != auth_method["description"] or is_state_changed(
+                config, auth_method["config"]
+            ):
+                if not module.check_mode:
+                    client.sys.tune_auth_method(path, description=description, **config)
+                changed = True
+        else:
+            if not module.check_mode:
+                client.sys.enable_auth_method(
+                    method_type, description=description, path=path, config=config
+                )
+            changed = True
+
+        if changed:
+            response = client.sys.list_auth_methods()
+            auth_method = response.get("data").get(path)
             module.exit_json(
                 changed=True,
                 msg="Successfully created or updated the authentication method %s"
                 % path,
-                auth_method=vault_auth_method.auth_method,
+                auth_method=auth_method,
             )
+
         module.exit_json(
             changed=False,
             msg="No changes to authentication method %s" % path,
-            auth_method=vault_auth_method.auth_method,
+            auth_method=auth_method,
         )
     elif state == "absent":
-        auth_method_exists = vault_auth_method.exists_auth_method(path)
-        if auth_method_exists:
-            vault_auth_method.delete_auth_method(path)
+        if exists:
+            if not module.check_mode:
+                client.sys.disable_auth_method(path)
+
             module.exit_json(
                 changed=True,
-                msg="Successfuly deleted authentication method %s" % path,
-                auth_method=vault_auth_method.auth_method,
+                msg="Successfully deleted authentication method %s" % path,
+                auth_method=auth_method,
             )
-        else:
-            module.exit_json(
-                changed=False, msg="Authentication method %s does not exist" % path
-            )
+
+        module.exit_json(
+            changed=False,
+            msg="Authentication method %s deleted or does not exist" % path,
+        )
 
 
 if __name__ == "__main__":

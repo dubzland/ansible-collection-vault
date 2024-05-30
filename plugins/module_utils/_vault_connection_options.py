@@ -8,11 +8,12 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import pytest
 
+class VaultConnectionOptions(object):
+    ARGUMENT_SPEC = dict(url=dict(type="str", required=True))
 
-@pytest.fixture()
-def mock_module(mocker):
-    module = mocker.Mock()
-    module.get_bin_path.return_value = "/mock/bin/testing"
-    return module
+    def __init__(self, params):
+        self.url = params.get("url")
+
+    def get_hvac_connection_params(self):
+        return dict(url=self.url)
