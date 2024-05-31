@@ -6,5 +6,5 @@ hvac
 jmespath
 yamllint==1.35.1
 pre-commit
-requests<2.32.0
+requests<2.32.4
 -r requirements-test.txt
