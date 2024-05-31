@@ -1,8 +1,10 @@
-ansible-core>=2.13.0
+ansible-core>=2.16.0
 ansible-lint>=6.21.0
 antsibull-docs
-docker>=6.1.0
+docker>=7
+hvac
 jmespath
 yamllint==1.35.1
 pre-commit
+requests<2.32.0
 -r requirements-test.txt

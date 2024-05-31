@@ -31,6 +31,12 @@ Also tested against the current development version of `ansible-core`.
 | [dubzland.vault.vault_init][vault_init]       | Performs initial initialization on the Vault installation |
 | [dubzland.vault.vault_unseal][vault_unseal]   | Unseals the Vault                                         |
 
+### Modules
+
+| Name                                                  | Description                          |
+| ----------------------------------------------------- | -------------------------------------|
+| [dubzland.vault.vault_auth_method][vault_auth_method] | Manages Vault Authentication methods |
+
 ## Licensing
 
 This collection is primarily licensed and distributed as a whole under the MIT License.
@@ -57,3 +63,4 @@ See [LICENSE](https://git.dubzland.com/dubzland/ansible-collections/vault/blob/m
 [vault_server]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_server_role.html
 [vault_init]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_init_role.html
 [vault_unseal]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_unseal_role.html
+[vault_auth_method]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_auth_method_module.html
