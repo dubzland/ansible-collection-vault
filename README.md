@@ -13,10 +13,9 @@ Installs and configures the [HashiCorp Vault][vault] secret managment service.
 
 This collection has been tested against following ansible-core versions:
 
-- 2.14
-- 2.15
 - 2.16
 - 2.17
+- 2.18
 
 Also tested against the current development version of `ansible-core`.
 

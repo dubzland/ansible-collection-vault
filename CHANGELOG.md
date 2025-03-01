@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `vault_auth_method` module (#8)
 
+### Changed
+
+- Update minimum ansible version to 2.16 (#10)
+
 ## [1.0.1] - 2024-05-09
 
 ### Changed
