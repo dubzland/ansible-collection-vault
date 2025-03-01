@@ -35,6 +35,7 @@ Also tested against the current development version of `ansible-core`.
 | Name                                                  | Description                          |
 | ----------------------------------------------------- | -------------------------------------|
 | [dubzland.vault.vault_auth_method][vault_auth_method] | Manages Vault Authentication methods |
+| [dubzland.vault.vault_approle][vault_approle]         | Manages Vault Approle logins         |
 
 ## Licensing
 
@@ -63,3 +64,4 @@ See [LICENSE](https://git.dubzland.com/dubzland/ansible-collections/vault/blob/m
 [vault_init]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_init_role.html
 [vault_unseal]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_unseal_role.html
 [vault_auth_method]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_auth_method_module.html
+[vault_approle]: https://docs.dubzland.io/ansible-collections/collections/dubzland/vault/vault_approle_module.html
