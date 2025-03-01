@@ -17,3 +17,9 @@
         state: present
         url: "http://localhost:8200"
         token: "{{ _vault_root_token }}"
+    - name: Create an AppRole login
+      dubzland.vault.vault_approle:
+        name: test_approle
+        state: present
+        url: "http://localhost:8200"
+        token: "{{ _vault_root_token }}"

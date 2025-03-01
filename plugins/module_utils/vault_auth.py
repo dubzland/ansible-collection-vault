@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-from .vault_auth_method_app_role import VaultAuthMethodAppRole
+from .vault_auth_method_approle import VaultAuthMethodApprole
 from .vault_auth_method_aws_iam import VaultAuthMethodAwsIam
 from .vault_auth_method_azure import VaultAuthMethodAzure
 from .vault_auth_method_cert import VaultAuthMethodCert
@@ -63,7 +63,7 @@ class VaultAuth(object):
 
     def __init__(self, params):
         self._authenticators = {
-            "approle": VaultAuthMethodAppRole,
+            "approle": VaultAuthMethodApprole,
             "aws_iam": VaultAuthMethodAwsIam,
             "azure": VaultAuthMethodAzure,
             "cert": VaultAuthMethodCert,

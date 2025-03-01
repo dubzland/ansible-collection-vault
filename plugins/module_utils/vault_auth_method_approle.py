@@ -11,7 +11,7 @@ __metaclass__ = type
 from ._vault_common import VaultAuthMethod
 
 
-class VaultAuthMethodAppRole(VaultAuthMethod):
+class VaultAuthMethodApprole(VaultAuthMethod):
     NAME = "authrole"
     AUTH_FIELDS = ["role_id", "secret_id", "mount_point"]
 
