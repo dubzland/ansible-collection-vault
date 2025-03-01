@@ -1,5 +1,6 @@
 __pycache__/
 *.un~
+.ansible/
 .cache/
 .venv
 /tests/output/
