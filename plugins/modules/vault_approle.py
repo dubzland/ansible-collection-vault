@@ -36,6 +36,7 @@ options:
     description: Name associated with this AppRole.
   bind_secret_id:
     type: bool
+    default: true
     description: Require V(secret_id) to be presented when logging in using this approle.
   secret_id_bound_cidrs:
     type: list
@@ -43,49 +44,62 @@ options:
     description: Blocks of IP addresses which can perform login operations.
   secret_id_num_uses:
     type: int
-    descripiton: Number of times any secret_id can be used to fetch a token. A value of zero allows unlimited uses.
+    default: 0
+    description: Number of times any secret_id can be used to fetch a token. A value of zero allows unlimited uses.
   secret_id_ttl:
     type: str
-    description: Duration after which a secret_id expires. This can be specified as an integer number of seconds or as a duration value like “5m”.
+    default: '0'
+    description: Duration after which a secret_id expires. This can be specified as an integer number of seconds or as a duration value like "5m".
   enable_local_secret_ids:
     type: bool
+    default: false
     description: Secret IDs generated using role will be cluster local.
   token_ttl:
     type: str
-    description: Incremental lifetime for generated tokens. This can be specified as an integer number of seconds or as a duration value like “5m”.
+    default: '0'
+    description: Incremental lifetime for generated tokens. This can be specified as an integer number of seconds or as a duration value like "5m".
   token_max_ttl:
     type: str
-    description: Maximum lifetime for generated tokens: This can be specified as an integer number of seconds or as a duration value like “5m”.
+    default: '0'
+    description: Maximum lifetime for generated tokens - This can be specified as an integer number of seconds or as a duration value like "5m".
   token_policies:
     type: list
     elements: str
+    default: []
     description: List of policies to encode onto generated tokens.
   token_bound_cidrs:
     type: list
     elements: str
+    default: []
     description: Blocks of IP addresses which can authenticate successfully.
   token_explicit_max_ttl:
     type: str
-    description: If set, will encode an explicit max TTL onto the token. This can be specified as an integer number of seconds or as a duration value like “5m”.
+    default: '0'
+    description: If set, will encode an explicit max TTL onto the token. This can be specified as an integer number of seconds or as a duration value like "5m".
   token_no_default_policy:
     type: bool
+    default: false
     description: Do not add the default policy to generated tokens, use only tokens specified in token_policies.
   token_num_uses:
     type: int
+    default: '0'
     description: Maximum number of times a generated token may be used. A value of zero allows unlimited uses.
   token_period:
     type: str
-    description: The period, if any, to set on the token. This can be specified as an integer number of seconds or as a duration value like “5m”.
+    default: '0'
+    description: The period, if any, to set on the token. This can be specified as an integer number of seconds or as a duration value like "5m".
   token_type:
     type: str
-    description: The type of token that should be generated.
     choices:
       - default
       - batch
       - service
+    default: default
+    description: The type of token that should be generated.
   mount_point:
     type: str
-    description: The “path” the method/backend was mounted on.
+    default: approle
+    description: The "path" the method/backend was mounted on.
   state:
     description:
       - Indicates the desired approle state.
@@ -116,7 +130,6 @@ from ansible_collections.dubzland.vault.plugins.module_utils.vault_utils import 
 from ansible_collections.dubzland.vault.plugins.module_utils.vault_module import (
     VaultModule,
 )
-from hvac import exceptions
 
 
 APPROLE_ATTRS = [
@@ -141,17 +154,17 @@ def main():
     argument_spec = VaultModule.generate_argument_spec(
         name=dict(type="str", required=True),
         bind_secret_id=dict(type="bool", default=True),
-        secret_id_bound_cidrs=dict(type="list", elements="str"),
-        secret_id_num_uses=dict(type="int", default=0),
-        secret_id_ttl=dict(type="str", default="0"),
+        secret_id_bound_cidrs=dict(type="list", elements="str", no_log=False),
+        secret_id_num_uses=dict(type="int", default=0, no_log=False),
+        secret_id_ttl=dict(type="str", default="0", no_log=False),
         enable_local_secret_ids=dict(type="bool", default=False),
-        token_ttl=dict(type="str", default="0"),
-        token_max_ttl=dict(type="str", default="0"),
-        token_policies=dict(type="list", elements="str", default=[]),
-        token_bound_cidrs=dict(type="list", elements="str", default=[]),
-        token_explicit_max_ttl=dict(type="str", default="0"),
+        token_ttl=dict(type="str", default="0", no_log=False),
+        token_max_ttl=dict(type="str", default="0", no_log=False),
+        token_policies=dict(type="list", elements="str", default=[], no_log=False),
+        token_bound_cidrs=dict(type="list", elements="str", default=[], no_log=False),
+        token_explicit_max_ttl=dict(type="str", default="0", no_log=False),
         token_no_default_policy=dict(type="bool", default=False),
-        token_num_uses=dict(type="int", default=0),
+        token_num_uses=dict(type="int", default=0, no_log=False),
         token_period=dict(type="str", default="0"),
         token_type=dict(
             type="str", choices=["default", "batch", "service"], default="default"
@@ -176,7 +189,7 @@ def main():
         response = client.auth.approle.read_role(name, mount_point=mount_point)
         approle = response.get("data")
         exists = True
-    except exceptions.InvalidPath:
+    except Exception:
         exists = False
 
     if state == "present":
