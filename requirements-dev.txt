@@ -4,6 +4,6 @@ antsibull-docs
 docker==7.1.0
 hvac
 jmespath
-yamllint==1.35.1
+yamllint==1.37.0
 pre-commit
 -r requirements-test.txt
